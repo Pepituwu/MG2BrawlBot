@@ -1,0 +1,74 @@
+import discord
+from discord.ext import commands
+from discord import app_commands
+
+class General(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    # --- COMMANDE !SYNC ---
+    @commands.command()
+    async def sync(self, ctx):
+        synced = await self.bot.tree.sync()
+        await ctx.send(f"✅ Synchro effectuée : {len(synced)} commandes slash sont actives.")
+
+    # --- COMMANDE /PING ---
+    @app_commands.command(name="ping", description="Vérifier la latence du bot")
+    async def ping(self, interaction: discord.Interaction):
+        latency = round(self.bot.latency * 1000)
+        await interaction.response.send_message(f"Pong! 🏓 ({latency}ms)")
+
+    # --- COMMANDE /HELP (Mise à jour avec les duels) ---
+    @app_commands.command(name="help", description="Affiche la liste des commandes et le mode d'emploi")
+    async def help_command(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="📚 Aide - Brawlhalla Clan Manager",
+            description="Bienvenue sur le bot de gestion de clan, de mercato et de duels.",
+            color=discord.Color.blurple()
+        )
+
+        # --- 1. SECTION PUBLIQUE & MERCATO ---
+        public_cmds = (
+            "🏆 **`/list_teams`** : Voir le classement, les chefs et les soldes.\n"
+            "🛡️ **`/team_info [équipe]`** : Détails d'une équipe.\n"
+            "🔨 **`/list_auctions`** : Voir toutes les enchères en cours.\n"
+            "🔎 **`/auction_info [joueur]`** : Trouver l'enchère d'un joueur spécifique."
+        )
+        embed.add_field(name="🌍 Commandes Générales", value=public_cmds, inline=False)
+
+        # --- 2. SECTION DUELS ---
+        duel_cmds = (
+            "🥊 **`/duel [cible] [%]`** : Défier une équipe (Mise : 5 à 15% du plus petit patrimoine).\n"
+            "⚔️ **`/list_duels`** : Voir les duels officiels en attente de résultat.\n\n"
+            "*Règles des duels :*\n"
+            "• Le chef défié peut **Accepter** (choix du mode de jeu) ou **Refuser** (Pénalité de 2% de la mise transférée au challenger).\n"
+            "• Un refus immunise l'équipe ciblée pendant 3 jours contre l'attaquant.\n"
+            "• Un duel accepté bloque les deux équipes (cooldown global de 3 jours)."
+        )
+        embed.add_field(name="🥊 Système de Duels", value=duel_cmds, inline=False)
+
+        # --- 3. FONCTIONNEMENT DES ENCHÈRES ---
+        auction_help = (
+            "• **Seuls les Chefs** peuvent utiliser les boutons (+1000, +2000...).\n"
+            "• L'ancien meneur reçoit un MP s'il se fait surenchérir.\n"
+            "• Le transfert et le paiement sont automatiques à la fin du chrono."
+        )
+        embed.add_field(name="💡 Comment enchérir ?", value=auction_help, inline=False)
+
+        # --- 4. SECTION ADMIN ---
+        if interaction.user.guild_permissions.administrator:
+            admin_cmds = (
+                "`/new_team` | `/delete_team` : Gestion des équipes\n"
+                "`/create_auction` : Mettre un joueur aux enchères\n"
+                "`/valide_duel` : Valider le gagnant d'un duel officiel\n"
+                "`/give_points` | `/remove_points` : Gestion de la banque\n"
+                "`/add_player` | `/remove_player` : Transferts forcés"
+            )
+            embed.add_field(name="👮 Espace Administrateur", value=admin_cmds, inline=False)
+
+        embed.set_footer(text="Bot développé pour la communauté Brawlhalla")
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+async def setup(bot):
+    await bot.add_cog(General(bot))

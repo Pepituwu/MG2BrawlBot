@@ -18,6 +18,9 @@ lib/
 lib64/
 parts/
 sdist/
+
+# Environment variables
+.env
 var/
 wheels/
 share/python-wheels/
@@ -216,3 +219,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.DS_Store
