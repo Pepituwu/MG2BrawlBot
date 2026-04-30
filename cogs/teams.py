@@ -7,7 +7,6 @@ class Teams(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # --- COMMANDE add_team ---
     @app_commands.command(name="add_team", description="Admin: Créer une nouvelle équipe")
     @app_commands.describe(nom="Le nom de l'équipe", chef="Le leader", points="Budget de départ")
     @app_commands.checks.has_permissions(administrator=True)
@@ -20,7 +19,12 @@ class Teams(commands.Cog):
         bot_data["teams"][nom] = {
             "leader_id": chef.id,
             "points": points,
-            "members": [chef.id],
+            "members": [
+                {
+                    "id": chef.id,
+                    "wealth": 0
+                }
+            ],
             "created_at": str(interaction.created_at)
         }
         save_data()
@@ -41,7 +45,8 @@ class Teams(commands.Cog):
 
         embed = discord.Embed(title="🏆 Équipes", color=discord.Color.blue())
         for name, info in teams.items():
-            details = f"👑 <@{info['leader_id']}>\n💰 {info['points']:,} MGP\n👥 {len(info['members'])}"
+            member_count = len(info['members'])
+            details = f"👑 <@{info['leader_id']}>\n💰 {info['points']:,} MGP\n👥 {member_count}"
             embed.add_field(name=f"🛡️ {name}", value=details, inline=True)
         await interaction.response.send_message(embed=embed)
 
@@ -60,15 +65,23 @@ class Teams(commands.Cog):
 
         leader_id = team_data.get("leader_id")
         points = team_data.get("points", 0)
-        members_ids = team_data.get("members", [])
+        members = team_data.get("members", [])
         created_at = team_data.get("created_at", "Date inconnue")
 
         members_list_text = ""
-        for member_id in members_ids:
-            if member_id == leader_id:
-                members_list_text += f"👑 <@{member_id}>\n"
+        for member in members:
+            # Gérer l'ancienne structure (simple ID) et la nouvelle (dict avec id et wealth)
+            if isinstance(member, dict):
+                member_id = member.get("id")
+                wealth = member.get("wealth", 0)
             else:
-                members_list_text += f"👤 <@{member_id}>\n"
+                member_id = member
+                wealth = 0
+            
+            if member_id == leader_id:
+                members_list_text += f"👑 <@{member_id}> | Fort: {wealth:,} MGP\n"
+            else:
+                members_list_text += f"👤 <@{member_id}> | Fort: {wealth:,} MGP\n"
 
         if not members_list_text:
             members_list_text = "Aucun membre"
@@ -79,7 +92,7 @@ class Teams(commands.Cog):
         
         date_display = created_at.split(" ")[0] if " " in created_at else created_at
         embed.add_field(name="📅 Création", value=date_display, inline=True)
-        embed.add_field(name=f"👥 Effectif ({len(members_ids)})", value=members_list_text, inline=False)
+        embed.add_field(name=f"👥 Effectif ({len(members)})", value=members_list_text, inline=False)
 
         await interaction.response.send_message(embed=embed)
 

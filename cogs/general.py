@@ -56,6 +56,12 @@ class General(commands.Cog):
         )
         embed.add_field(name="💡 Comment enchérir ?", value=auction_help, inline=False)
 
+        # --- 3.5 SECTION FORTUNE PERSONNELLE ---
+        wealth_cmds = (
+            "💎 **`/player_ranking [équipe]`** : Classement des joueurs par fortune personnelle.\n"
+        )
+        embed.add_field(name="👑 Richesse Personnelle", value=wealth_cmds, inline=False)
+
         # --- 4. SECTION ADMIN ---
         if interaction.user.guild_permissions.administrator:
             admin_cmds = (
@@ -63,6 +69,7 @@ class General(commands.Cog):
                 "`/add_auction` : Mettre un joueur aux enchères\n"
                 "`/valide_duel` : Valider le gagnant d'un duel officiel\n"
                 "`/cancel_duel` : Annuler un duel sans pénalité\n"
+                "`/add_wealth [équipe] [joueur] [montant]` : Attribuer des points de contribution hebdo\n"
                 "`/add_points` | `/remove_points` : Gestion de la banque\n"
                 "`/add_player` | `/remove_player` : Transferts forcés"
             )
