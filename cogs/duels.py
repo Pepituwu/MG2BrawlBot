@@ -212,6 +212,31 @@ class Duels(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     # 3. COMMANDE POUR VALIDER UN DUEL (Admin/Modo)
+    @app_commands.command(name="cancel_duel", description="Modo: Annuler un duel sans pénalité")
+    @app_commands.describe(duel_id="L'ID du duel (affiché dans /list_duels)")
+    @app_commands.checks.has_permissions(administrator=True) 
+    async def cancel_duel(self, interaction: discord.Interaction, duel_id: str):
+        duels = bot_data.get("duels", {})
+        
+        if duel_id not in duels:
+            await interaction.response.send_message("❌ Cet ID de duel n'existe pas.", ephemeral=True)
+            return
+            
+        duel = duels[duel_id]
+        challenger = duel["challenger"]
+        target = duel["target"]
+
+        # Suppression du duel sans pénalité
+        del bot_data["duels"][duel_id]
+        save_data()
+
+        embed = discord.Embed(title="🛑 DUEL ANNULÉ", color=discord.Color.greyple())
+        embed.description = f"Le duel entre **{challenger}** et **{target}** a été annulé par un modérateur, sans pénalité pour les équipes."
+        embed.add_field(name="ID du Duel", value=f"`{duel_id}`", inline=False)
+        embed.set_footer(text="Aucune équipe ne perd ni ne gagne de points.")
+
+        await interaction.response.send_message(embed=embed)
+
     @app_commands.command(name="valide_duel", description="Modo: Valider le résultat d'un duel")
     @app_commands.describe(duel_id="L'ID du duel (affiché dans /list_duels)", gagnant="L'équipe qui a gagné le match")
     @app_commands.autocomplete(gagnant=team_autocomplete)
