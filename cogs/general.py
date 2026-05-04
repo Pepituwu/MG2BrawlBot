@@ -29,9 +29,10 @@ class General(commands.Cog):
 
         # --- 1. SECTION PUBLIQUE & MERCATO ---
         public_cmds = (
-            "🏆 **`/list_teams`** : Voir le classement, les chefs et les soldes.\n"
+            "� **`/ping`** : Vérifier la latence du bot.\n"
+            "🏆 **`/get_teams`** : Voir le classement, les chefs et les soldes.\n"
             "🛡️ **`/team_info [équipe]`** : Détails d'une équipe.\n"
-            "🔨 **`/list_auctions`** : Voir toutes les enchères en cours.\n"
+            "🔨 **`/get_auctions`** : Voir toutes les enchères en cours.\n"
             "🔎 **`/auction_info [joueur]`** : Trouver l'enchère d'un joueur spécifique."
         )
         embed.add_field(name="🌍 Commandes Générales", value=public_cmds, inline=False)
@@ -55,13 +56,21 @@ class General(commands.Cog):
         )
         embed.add_field(name="💡 Comment enchérir ?", value=auction_help, inline=False)
 
+        # --- 3.5 SECTION FORTUNE PERSONNELLE ---
+        wealth_cmds = (
+            "💎 **`/player_ranking [équipe]`** : Classement des joueurs par fortune personnelle.\n"
+        )
+        embed.add_field(name="👑 Richesse Personnelle", value=wealth_cmds, inline=False)
+
         # --- 4. SECTION ADMIN ---
         if interaction.user.guild_permissions.administrator:
             admin_cmds = (
-                "`/new_team` | `/delete_team` : Gestion des équipes\n"
-                "`/create_auction` : Mettre un joueur aux enchères\n"
+                "`/add_team` | `/remove_teams` : Gestion des équipes\n"
+                "`/add_auction` : Mettre un joueur aux enchères\n"
                 "`/valide_duel` : Valider le gagnant d'un duel officiel\n"
-                "`/give_points` | `/remove_points` : Gestion de la banque\n"
+                "`/cancel_duel` : Annuler un duel sans pénalité\n"
+                "`/add_wealth [équipe] [joueur] [montant]` : Attribuer des points de contribution hebdo\n"
+                "`/add_points` | `/remove_points` : Gestion de la banque\n"
                 "`/add_player` | `/remove_player` : Transferts forcés"
             )
             embed.add_field(name="👮 Espace Administrateur", value=admin_cmds, inline=False)

@@ -117,13 +117,17 @@ class AuctionView(discord.ui.View):
             # 2. Transfert du joueur
             # Retrait de l'ancienne équipe
             for t_name, t_data in bot_data["teams"].items():
-                if player_id in t_data["members"]:
-                    if t_name != winner_team:
-                        t_data["members"].remove(player_id)
+                member_to_remove = next((m for m in t_data["members"] if m["id"] == player_id), None) if isinstance(t_data["members"][0] if t_data["members"] else {}, dict) else (player_id if player_id in t_data["members"] else None)
+                if t_name != winner_team and member_to_remove:
+                    t_data["members"].remove(member_to_remove)
             
             # Ajout à la nouvelle équipe
-            if player_id not in bot_data["teams"][winner_team]["members"]:
-                bot_data["teams"][winner_team]["members"].append(player_id)
+            member_exists = any(m["id"] == player_id if isinstance(m, dict) else m == player_id for m in bot_data["teams"][winner_team]["members"])
+            if not member_exists:
+                bot_data["teams"][winner_team]["members"].append({
+                    "id": player_id,
+                    "wealth": 0
+                })
             
             # 3. Annonce de victoire
             embed = discord.Embed(title="🔨 ENCHÈRE TERMINÉE (MANUEL)", color=discord.Color.gold())
@@ -188,12 +192,16 @@ class Auctions(commands.Cog):
                         
                         # Gestion du transfert
                         for t_name, t_data in bot_data["teams"].items():
-                            if player_id in t_data["members"]:
-                                if t_name != winner_team: 
-                                    t_data["members"].remove(player_id)
+                            member_to_remove = next((m for m in t_data["members"] if m["id"] == player_id), None) if isinstance(t_data["members"][0] if t_data["members"] else {}, dict) else (player_id if player_id in t_data["members"] else None)
+                            if t_name != winner_team and member_to_remove: 
+                                t_data["members"].remove(member_to_remove)
 
-                        if player_id not in bot_data["teams"][winner_team]["members"]:
-                            bot_data["teams"][winner_team]["members"].append(player_id)
+                        member_exists = any(m["id"] == player_id if isinstance(m, dict) else m == player_id for m in bot_data["teams"][winner_team]["members"])
+                        if not member_exists:
+                            bot_data["teams"][winner_team]["members"].append({
+                                "id": player_id,
+                                "wealth": 0
+                            })
                         
                         # Annonce
                         embed = discord.Embed(title="🔨 ENCHÈRE TERMINÉE !", color=discord.Color.gold())
