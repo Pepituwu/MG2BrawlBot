@@ -101,7 +101,6 @@ class DuelView(discord.ui.View):
 
         # Pénalité
         bot_data["teams"][self.target]["points"] -= self.penalty
-        bot_data["teams"][self.challenger]["points"] += self.penalty
 
         # Cooldown de refus
         if "duel_cooldowns" not in bot_data["teams"][self.target]:
@@ -115,7 +114,7 @@ class DuelView(discord.ui.View):
 
         embed = discord.Embed(title="🏳️ DÉFI REFUSÉ", color=discord.Color.dark_grey())
         embed.description = f"L'équipe **{self.target}** a refusé le duel contre **{self.challenger}**."
-        embed.add_field(name="Pénalité payée", value=f"{self.penalty:,} MG transférés au challenger.", inline=False)
+        embed.add_field(name="Pénalité payée", value=f"{self.penalty:,} MGP.", inline=False)
         embed.set_footer(text=f"{self.target} est immunisée contre {self.challenger} pendant 3 jours.")
 
         await interaction.response.edit_message(embed=embed, view=None)
@@ -191,8 +190,8 @@ class Duels(commands.Cog):
         embed = discord.Embed(title="🥊 DÉFI LANCÉ !", color=discord.Color.orange())
         embed.description = f"Le chef de **{challenger}** provoque **{cible}** en duel !"
         embed.add_field(name="Pourcentage choisi", value=f"{pourcentage}%", inline=True)
-        embed.add_field(name="Mise en jeu", value=f"**{wager:,} MG**", inline=True)
-        embed.add_field(name="Pénalité de refus (2%)", value=f"**{penalty:,} MG**", inline=False)
+        embed.add_field(name="Mise en jeu", value=f"**{wager:,} MGP**", inline=True)
+        embed.add_field(name="Pénalité de refus (2%)", value=f"**{penalty:,} MGP**", inline=False)
         embed.set_footer(text="Seul le chef de l'équipe défiée peut répondre.")
 
         view = DuelView(challenger, cible, wager, penalty, target_leader_id)
@@ -216,7 +215,7 @@ class Duels(commands.Cog):
             
             embed.add_field(
                 name=f"ID : `{duel_id}`", 
-                value=f"**{chal}** 🆚 **{tgt}**\nMode: {mode} | Mise: {mise:,} MG", 
+                value=f"**{chal}** 🆚 **{tgt}**\nMode: {mode} | Mise: {mise:,} MGP", 
                 inline=False
             )
             
@@ -282,8 +281,8 @@ class Duels(commands.Cog):
         # Annonce du résultat
         embed = discord.Embed(title="🏆 RÉSULTAT DU DUEL", color=discord.Color.green())
         embed.description = f"**{gagnant}** a écrasé **{perdant}** et remporte la mise !"
-        embed.add_field(name="Gains", value=f"+ {wager:,} MG pour {gagnant}", inline=False)
-        embed.add_field(name="Pertes", value=f"- {wager:,} MG pour {perdant}", inline=False)
+        embed.add_field(name="Gains", value=f"+ {wager:,} MGP pour {gagnant}", inline=False)
+        embed.add_field(name="Pertes", value=f"- {wager:,} MGP pour {perdant}", inline=False)
         embed.set_thumbnail(url="https://cdn-icons-png.flaticon.com/512/3112/3112946.png") # Petite icone de coupe
 
         await interaction.response.send_message(embed=embed)
