@@ -31,9 +31,13 @@ class GameModeSelect(discord.ui.Select):
         now = datetime.datetime.now()
         cooldown_end = int((now + timedelta(days=3)).timestamp())
 
-        # 1. Appliquer le cooldown global de 3 jours aux DEUX équipes
-        bot_data["teams"][self.challenger]["global_duel_cooldown"] = cooldown_end
-        bot_data["teams"][self.target]["global_duel_cooldown"] = cooldown_end
+        # Appliquer le cooldown pour empêcher le challenger de redéfier pendant 3 jours
+        if "duel_cooldowns" not in bot_data["teams"][self.target]:
+            bot_data["teams"][self.target]["duel_cooldowns"] = {}
+        bot_data["teams"][self.target]["duel_cooldowns"][self.challenger] = {
+            "until": cooldown_end,
+            "reason": "accepted"
+        }
 
         # 2. Sauvegarder le duel actif pour les modérateurs
         if "duels" not in bot_data:
@@ -100,9 +104,12 @@ class DuelView(discord.ui.View):
         bot_data["teams"][self.challenger]["points"] += self.penalty
 
         # Cooldown de refus
-        if "refused_duels" not in bot_data["teams"][self.target]:
-            bot_data["teams"][self.target]["refused_duels"] = {}
-        bot_data["teams"][self.target]["refused_duels"][self.challenger] = cooldown_end
+        if "duel_cooldowns" not in bot_data["teams"][self.target]:
+            bot_data["teams"][self.target]["duel_cooldowns"] = {}
+        bot_data["teams"][self.target]["duel_cooldowns"][self.challenger] = {
+            "until": cooldown_end,
+            "reason": "refused"
+        }
         
         save_data()
 
@@ -149,19 +156,23 @@ class Duels(commands.Cog):
             await interaction.response.send_message("❌ Le pourcentage doit être compris entre **5 et 15**.", ephemeral=True)
             return
 
-        chal_cooldown = bot_data["teams"][challenger].get("global_duel_cooldown", 0)
-        if chal_cooldown > now_ts:
-            await interaction.response.send_message(f"⏳ Votre équipe est en période de repos. Retour possible <t:{chal_cooldown}:R>.", ephemeral=True)
-            return
+        cooldown_entry = bot_data["teams"][cible].get("duel_cooldowns", {}).get(challenger)
+        if not cooldown_entry:
+            refused_ts = bot_data["teams"][cible].get("refused_duels", {}).get(challenger, 0)
+            if refused_ts > now_ts:
+                cooldown_entry = {"until": refused_ts, "reason": "refused"}
 
-        target_cooldown = bot_data["teams"][cible].get("global_duel_cooldown", 0)
-        if target_cooldown > now_ts:
-            await interaction.response.send_message(f"⏳ L'équipe {cible} est déjà occupée ou en repos. Dispo <t:{target_cooldown}:R>.", ephemeral=True)
-            return
-
-        refused_cooldown = bot_data["teams"][cible].get("refused_duels", {}).get(challenger, 0)
-        if refused_cooldown > now_ts:
-            await interaction.response.send_message(f"🛡️ L'équipe {cible} a récemment refusé votre défi. Réessayez <t:{refused_cooldown}:R>.", ephemeral=True)
+        if cooldown_entry and cooldown_entry.get("until", 0) > now_ts:
+            reason = cooldown_entry.get("reason", "refused")
+            until_ts = cooldown_entry["until"]
+            if reason == "accepted":
+                await interaction.response.send_message(
+                    f"⏳ L'équipe {cible} a déjà accepté un duel avec vous. Réessayez <t:{until_ts}:R>.", ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    f"🛡️ L'équipe {cible} a récemment refusé votre défi. Réessayez <t:{until_ts}:R>.", ephemeral=True
+                )
             return
 
         chal_points = bot_data["teams"][challenger]["points"]
