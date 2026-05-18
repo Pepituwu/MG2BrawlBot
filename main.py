@@ -9,6 +9,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 # TOKEN = os.getenv('DISCORD_TEST_TOKEN') # bot de test
 
+BH_API_KEY = os.getenv('BH_API_KEY') 
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
