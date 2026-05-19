@@ -62,7 +62,16 @@ class General(commands.Cog):
         )
         embed.add_field(name="👑 Richesse Personnelle", value=wealth_cmds, inline=False)
 
-        # --- 4. SECTION ADMIN ---
+        # --- 4. SECTION BRAWLHALLA ---
+        bh_cmds = (
+            "🎮 **`/link_bh [brawlhalla_id]`** : Lier votre compte Brawlhalla au serveur.\n"
+            "🔓 **`/unlink_bh`** : Délier votre compte Brawlhalla.\n"
+            "📊 **`/show_bh`** : Afficher votre compte Brawlhalla lié (Rating, Tier, Peak).\n"
+            "👤 **`/get_player_info [membre]`** : Afficher les infos complètes d'un joueur (équipe, contribution, Peak ELO 1v1 et 2v2)."
+        )
+        embed.add_field(name="🎮 Comptes Brawlhalla", value=bh_cmds, inline=False)
+
+        # --- 5. SECTION ADMIN ---
         if interaction.user.guild_permissions.administrator:
             admin_cmds = (
                 "`/add_team` | `/remove_teams` : Gestion des équipes\n"

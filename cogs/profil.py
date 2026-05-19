@@ -24,26 +24,21 @@ class ProfileCog(commands.Cog):
 			text = await resp.text()
 			raise ValueError(f"API error {resp.status}: {text}")
 
-	@app_commands.command(name="link_bh", description="Lier votre compte Brawlhalla (steamid64 ou brawlhalla_id)")
-	@app_commands.describe(steamid="Steam64 ID", brawlhalla_id="ID Brawlhalla")
-	async def link_bh(self, interaction: discord.Interaction, steamid: str | None = None, brawlhalla_id: int | None = None):
+	@app_commands.command(name="link_bh", description="Lier votre compte Brawlhalla")
+	@app_commands.describe(brawlhalla_id="ID Brawlhalla")
+	async def link_bh(self, interaction: discord.Interaction, brawlhalla_id: int | None = None):
 		await interaction.response.defer(ephemeral=True)
 		if not self.api_key:
 			await interaction.followup.send("La variable d'environnement BRAWLHALLA_API_KEY n'est pas définie.", ephemeral=True)
 			return
-		if not steamid and not brawlhalla_id:
-			await interaction.followup.send("Fournissez `steamid` ou `brawlhalla_id`.", ephemeral=True)
+		if not brawlhalla_id:
+			await interaction.followup.send("Fournissez `brawlhalla_id`.", ephemeral=True)
 			return
 		async with aiohttp.ClientSession() as session:
 			try:
-				if steamid:
-					data = await self._fetch(session, "/search", params={"steamid": steamid})
-					bh_id = data.get("brawlhalla_id")
-					name = data.get("name")
-				else:
-					bh_id = brawlhalla_id
-					data = await self._fetch(session, f"/player/{bh_id}/stats")
-					name = data.get("name")
+				data = await self._fetch(session, f"/player/{brawlhalla_id}/stats")
+				bh_id = brawlhalla_id
+				name = data.get("name")
 			except RuntimeError:
 				await interaction.followup.send("Clé API manquante.", ephemeral=True)
 				return
@@ -77,9 +72,9 @@ class ProfileCog(commands.Cog):
 			return None
 		for team_name, team in dm["teams"].items():
 			members = team.get("members", [])
-			team_total = sum(member.get("wealth", 0) for member in members)
+			team_total = sum(member.get("wealth", 0) for member in members if isinstance(member, dict))
 			for member in members:
-				if member.get("id") == discord_id:
+				if isinstance(member, dict) and member.get("id") == discord_id:
 					player_wealth = member.get("wealth", 0)
 					percent = 0.0
 					if team_total > 0:
@@ -95,7 +90,7 @@ class ProfileCog(commands.Cog):
 	@app_commands.command(name="get_player_info", description="Obtenir les infos de l'utilisateur: équipe, contribution, pseudo Brawlhalla, peak ELO 1v1 et 2v2")
 	@app_commands.describe(member="Membre Discord à afficher (laisser vide pour vous)")
 	async def get_player_info(self, interaction: discord.Interaction, member: discord.Member | None = None):
-		await interaction.response.defer(ephemeral=True)
+		await interaction.response.defer(ephemeral=False)
 		target = member or interaction.user
 		dm = data_manager.bot_data
 		if "brawlhalla" not in dm or str(target.id) not in dm["brawlhalla"]:
@@ -129,13 +124,13 @@ class ProfileCog(commands.Cog):
 		embed.add_field(name="Contribution", value=contribution, inline=False)
 		embed.add_field(name="Pseudo Brawlhalla", value=entry.get("name", "N/A"), inline=False)
 		embed.add_field(name="Peak ELO 1v1", value=str(peak_1v1), inline=True)
-		embed.add_field(name="Peak ELO 2v2", value=str(peak_2v2), inline=True)
+		embed.add_field(name="Peak ELO 2v2 (Commun)", value=str(peak_2v2), inline=True)
 		embed.set_footer(text="Informations récupérées depuis l'API Brawlhalla")
-		await interaction.followup.send(embed=embed, ephemeral=True)
+		await interaction.followup.send(embed=embed, ephemeral=False)
 
 	@app_commands.command(name="show_bh", description="Afficher le compte Brawlhalla lié")
 	async def show_bh(self, interaction: discord.Interaction):
-		await interaction.response.defer(ephemeral=True)
+		await interaction.response.defer(ephemeral=False)
 		dm = data_manager.bot_data
 		if "brawlhalla" not in dm or str(interaction.user.id) not in dm["brawlhalla"]:
 			await interaction.followup.send("Aucun compte lié. Utilisez /link_bh.", ephemeral=True)
@@ -162,7 +157,7 @@ class ProfileCog(commands.Cog):
 		embed.add_field(name="Tier 1v1", value=str(tier), inline=True)
 		embed.add_field(name="Peak 1v1", value=str(peak), inline=False)
 		embed.set_footer(text="Informations récupérées depuis l'API Brawlhalla")
-		await interaction.followup.send(embed=embed, ephemeral=True)
+		await interaction.followup.send(embed=embed, ephemeral=False)
 
 async def setup(bot: commands.Bot):
 	await bot.add_cog(ProfileCog(bot))
