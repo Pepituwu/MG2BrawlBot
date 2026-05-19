@@ -165,16 +165,36 @@ class Members(commands.Cog):
             await interaction.response.send_message("❌ Aucun joueur trouvé.", ephemeral=True)
             return
         
+        # Initialiser l'embed
         embed = discord.Embed(title="🌍 Classement Global des Joueurs", color=discord.Color.blue())
         embed.description = "Fortune personnelle de tous les joueurs"
+
+        # Nombre maximum de caractères par champ d'embed
+        MAX_FIELD_LENGTH = 1024
         
         ranking_text = ""
+        field_count = 0
+
         for i, member in enumerate(sorted_members, 1):
             user = await interaction.client.fetch_user(member["id"])
             username = user.name if user else f"ID:{member['id']}"
-            ranking_text += f"{i}. **{username}** | {member['team']} : {member['wealth']:,} MGP\n"
-        
-        embed.add_field(name="Joueurs", value=ranking_text, inline=False)
+            
+            # Formatage de l'entrée du joueur
+            member_line = f"{i}. **{username}** | {member['team']} : {member['wealth']:,} MGP\n"
+            
+            # Vérifier si l'ajout de la ligne actuelle dépasse la limite de caractères
+            if len(ranking_text) + len(member_line) > MAX_FIELD_LENGTH and ranking_text != "":
+                # Ajouter le champ actuel et en commencer un nouveau
+                embed.add_field(name=f"Joueurs (suite {field_count + 1})", value=ranking_text, inline=False)
+                ranking_text = ""
+                field_count += 1
+            
+            ranking_text += member_line
+            
+        # Ajouter le dernier champ si ranking_text n'est pas vide
+        if ranking_text:
+            embed.add_field(name=f"Joueurs (suite {field_count + 1})" if field_count > 0 else "Joueurs", value=ranking_text, inline=False)
+
         embed.set_footer(text=f"Total: {len(sorted_members)} joueurs")
         
         await interaction.response.send_message(embed=embed)
