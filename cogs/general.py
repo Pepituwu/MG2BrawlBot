@@ -33,7 +33,9 @@ class General(commands.Cog):
             "🏆 **`/get_teams`** : Voir le classement, les chefs et les soldes.\n"
             "🛡️ **`/team_info [équipe]`** : Détails d'une équipe.\n"
             "🔨 **`/get_auctions`** : Voir toutes les enchères en cours.\n"
-            "🔎 **`/auction_info [joueur]`** : Trouver l'enchère d'un joueur spécifique."
+            "🔎 **`/auction_info [joueur]`** : Trouver l'enchère d'un joueur spécifique.\n"
+            "💎 **`/team_ranking`** : Classement des équipes par fortune."
+            "👑 **`/global_ranking`** : Classement des joueurs par fortune personnelle."
         )
         embed.add_field(name="🌍 Commandes Générales", value=public_cmds, inline=False)
 

@@ -40,9 +40,19 @@ class Members(commands.Cog):
             return
 
         # Chercher et retirer le joueur
-        member_to_remove = next((m for m in t_data["members"] if m["id"] == player.id), None)
-        if member_to_remove:
-            t_data["members"].remove(member_to_remove)
+        member_index_to_remove = -1
+        for i, m_entry in enumerate(t_data["members"]):
+            if isinstance(m_entry, dict):
+                if m_entry.get("id") == player.id:
+                    member_index_to_remove = i
+                    break
+            elif isinstance(m_entry, (int, float)):
+                if int(m_entry) == player.id:
+                    member_index_to_remove = i
+                    break
+
+        if member_index_to_remove != -1:
+            del t_data["members"][member_index_to_remove]
             save_data()
             await interaction.response.send_message(f"🚪 {player.mention} retiré de **{team}**.")
         else:
@@ -60,7 +70,19 @@ class Members(commands.Cog):
         t_data = bot_data["teams"][team]
         
         # Chercher le joueur
-        member = next((m for m in t_data["members"] if m["id"] == player.id), None)
+        member_obj = None
+        for i, m_entry in enumerate(t_data["members"]):
+            if isinstance(m_entry, dict):
+                if m_entry.get("id") == player.id:
+                    member_obj = m_entry
+                    break
+            elif isinstance(m_entry, (int, float)):
+                if int(m_entry) == player.id:
+                    member_obj = {"id": int(m_entry), "wealth": 0}
+                    t_data["members"][i] = member_obj # Update in-place
+                    break
+
+        member = member_obj
         if not member:
             await interaction.response.send_message(f"⚠️ {player.mention} n'est pas dans **{team}**.", ephemeral=True)
             return
@@ -90,7 +112,15 @@ class Members(commands.Cog):
         t_data = bot_data["teams"][team]
         
         # Trier les membres par fortune (décroissant)
-        sorted_members = sorted(t_data["members"], key=lambda m: m["wealth"], reverse=True)
+        # Gérer les anciennes entrées où les membres sont des IDs entiers
+        def get_member_wealth(member_entry):
+            if isinstance(member_entry, dict):
+                return member_entry.get("wealth", 0)
+            elif isinstance(member_entry, (int, float)):
+                return 0  # Les anciens IDs entiers ont une fortune de 0 par défaut
+            return 0 # Cas par défaut si autre type inattendu
+
+        sorted_members = sorted(t_data["members"], key=get_member_wealth, reverse=True)
         
         if not sorted_members:
             await interaction.response.send_message(f"❌ Aucun membre dans **{team}**.", ephemeral=True)
@@ -100,18 +130,54 @@ class Members(commands.Cog):
         embed.description = "Fortune personnelle des joueurs (mise à jour hebdomadaire)"
         
         ranking_text = ""
-        for i, member in enumerate(sorted_members, 1):
-            user = await interaction.client.fetch_user(member["id"])
-            username = user.name if user else f"ID:{member['id']}"
+        for i, member_entry in enumerate(sorted_members, 1):
+            if isinstance(member_entry, (int, float)):
+                member_entry = {"id": int(member_entry), "wealth": 0}
+
+            user = await interaction.client.fetch_user(member_entry["id"])
+            username = user.name if user else f"ID:{member_entry['id']}"
             
-            medal = "👑" if member["id"] == t_data["leader_id"] else "•"
-            ranking_text += f"{i}. {medal} **{username}** : {member['wealth']:,} MGP\n"
+            medal = "👑" if member_entry["id"] == t_data["leader_id"] else "•"
+            ranking_text += f"{i}. {medal} **{username}** : {member_entry['wealth']:,} MGP\n"
         
         embed.add_field(name="Joueurs", value=ranking_text, inline=False)
         embed.set_footer(text=f"Effectif total: {len(sorted_members)} joueurs")
         
         await interaction.response.send_message(embed=embed)
 
+    # --- GLOBAL RANKING --- 
+    @app_commands.command(name="global_ranking", description="Affiche le classement global de tous les joueurs (par fortune personnelle)")
+    async def global_ranking(self, interaction: discord.Interaction):
+        """Affiche tous les joueurs de toutes les équipes triés par fortune personnelle"""
+        all_members = []
+        for team_name, team in bot_data.get("teams", {}).items():
+            for member in team.get("members", []):
+                if isinstance(member, dict):
+                    all_members.append({
+                        "id": member["id"],
+                        "wealth": member.get("wealth", 0),
+                        "team": team_name
+                    })
+        
+        sorted_members = sorted(all_members, key=lambda m: m["wealth"], reverse=True)
+        
+        if not sorted_members:
+            await interaction.response.send_message("❌ Aucun joueur trouvé.", ephemeral=True)
+            return
+        
+        embed = discord.Embed(title="🌍 Classement Global des Joueurs", color=discord.Color.blue())
+        embed.description = "Fortune personnelle de tous les joueurs"
+        
+        ranking_text = ""
+        for i, member in enumerate(sorted_members, 1):
+            user = await interaction.client.fetch_user(member["id"])
+            username = user.name if user else f"ID:{member['id']}"
+            ranking_text += f"{i}. **{username}** | {member['team']} : {member['wealth']:,} MGP\n"
+        
+        embed.add_field(name="Joueurs", value=ranking_text, inline=False)
+        embed.set_footer(text=f"Total: {len(sorted_members)} joueurs")
+        
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Members(bot))

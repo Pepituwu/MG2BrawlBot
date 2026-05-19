@@ -96,6 +96,23 @@ class Teams(commands.Cog):
 
         await interaction.response.send_message(embed=embed)
 
+    # --- COMMANDE TEAM RANKING ---
+    @app_commands.command(name="team_ranking", description="Affiche le classement des équipes")
+    async def team_ranking(self, interaction: discord.Interaction):
+        teams = bot_data.get("teams", {})
+        if not teams:
+            await interaction.response.send_message("❌ Aucune équipe.", ephemeral=True)
+            return
+
+        sorted_teams = sorted(teams.items(), key=lambda x: x[1].get("points", 0), reverse=True)
+        embed = discord.Embed(title="📊 Classement des Équipes", color=discord.Color.purple())
+        for rank, (name, info) in enumerate(sorted_teams, start=1):
+            points = info.get("points", 0)
+            leader_id = info.get("leader_id")
+            embed.add_field(name=f"#{rank} - {name}", value=f"👑 <@{leader_id}> | 💰 {points:,} MGP", inline=False)
+        await interaction.response.send_message(embed=embed)
+
+
     # --- COMMANDE REMOVE_TEAM ---
     @app_commands.command(name="remove_teams", description="Admin: Supprimer une équipe")
     @app_commands.describe(team="L'équipe à supprimer")
