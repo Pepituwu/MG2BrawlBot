@@ -277,12 +277,49 @@ class Events(commands.Cog):
             creator_name = creator.name if creator else "Inconnu"
 
             embed.add_field(
-                name=f"🎪 {event['team']} - {event['amount']:,} MGP",
+                name=f"🎪 {event['team'] if 'team' in event else 'N/A'} - {event['amount']:,} MGP",
                 value=f"Organisateur: {creator_name}\nParticipants: {len(event['participants'])}\nDurée: {event['duration_minutes']} min\nID: {event_id[-8:]}",
                 inline=True
             )
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="cancel_event", description="Annuler un événement actif (Admin seulement)")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def cancel_event(self, interaction: discord.Interaction, event_id: str):
+        """Annule un événement par son ID"""
+        # Rechercher l'event par ID complet ou par les 8 derniers caractères
+        target_event_id = None
+        for eid in bot_data["events"].keys():
+            if eid == event_id or eid.endswith(event_id):
+                target_event_id = eid
+                break
+
+        if not target_event_id:
+            await interaction.response.send_message(
+                f"❌ Aucun événement actif trouvé avec l'ID: `{event_id}`\n"
+                f"Utilisez `/list_events` pour voir les événements actifs et leurs IDs complets.",
+                ephemeral=True
+            )
+            return
+
+        event_data = bot_data["events"].get(target_event_id)
+        if not event_data or not event_data.get("active", False):
+            await interaction.response.send_message(
+                f"❌ L'événement avec l'ID `{target_event_id[-8:]}` n'est plus actif.",
+                ephemeral=True
+            )
+            return
+
+        # Marquer l'event comme inactif plutôt que de le supprimer totalement
+        # (garder l'historique éventuel)
+        event_data["active"] = False
+        save_data()
+
+        await interaction.response.send_message(
+            f"✅ L'événement `{target_event_id[-8:]}` a été annulé avec succès.",
+            ephemeral=True
+        )
 
 async def setup(bot):
     await bot.add_cog(Events(bot))

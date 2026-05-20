@@ -76,12 +76,14 @@ class General(commands.Cog):
         # --- 5. SECTION ÉVÉNEMENTS ---
         event_cmds = (
             "🎪 **`/create_event`** : Créer un nouvel événement (Admin seulement)\n"
-            "📋 **`/list_events`** : Lister les événements actifs\n\n"
+            "📋 **`/list_events`** : Lister les événements actifs\n"
+            "🗑️ **`/cancel_event [event_id]`** : Annuler un événement (Admin seulement)\n\n"
             "*Comment ça marche :*\n"
             "• Les admins créent des événements avec une récompense en MGP\n"
             "• Les membres s'inscrivent via les boutons sous l'embed\n"
             "• L'admin termine l'event et désigne le gagnant\n"
-            "• Le gagnant reçoit la récompense (similaire à /add_wealth)"
+            "• Le gagnant reçoit la récompense (similaire à /add_wealth)\n"
+            "• Les admins peuvent annuler les events avec leur ID"
         )
         embed.add_field(name="🎉 Système d'Événements", value=event_cmds, inline=False)
 
