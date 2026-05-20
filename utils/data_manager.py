@@ -8,15 +8,16 @@ DATA_FILE = "data.json"
 # --- GESTION DES DONNÉES ---
 def load_data():
     if not os.path.exists(DATA_FILE):
-        return {"teams": {}, "auctions": {}}
+        return {"teams": {}, "auctions": {}, "events": {}}
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
             if "teams" not in data: data["teams"] = {}
             if "auctions" not in data: data["auctions"] = {}
+            if "events" not in data: data["events"] = {}
             return data
     except:
-        return {"teams": {}, "auctions": {}}
+        return {"teams": {}, "auctions": {}, "events": {}}
 
 bot_data = load_data()
 

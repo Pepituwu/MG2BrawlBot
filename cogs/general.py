@@ -73,7 +73,19 @@ class General(commands.Cog):
         )
         embed.add_field(name="🎮 Comptes Brawlhalla", value=bh_cmds, inline=False)
 
-        # --- 5. SECTION ADMIN ---
+        # --- 5. SECTION ÉVÉNEMENTS ---
+        event_cmds = (
+            "🎪 **`/create_event`** : Créer un nouvel événement (Admin seulement)\n"
+            "📋 **`/list_events`** : Lister les événements actifs\n\n"
+            "*Comment ça marche :*\n"
+            "• Les admins créent des événements avec une récompense en MGP\n"
+            "• Les membres s'inscrivent via les boutons sous l'embed\n"
+            "• L'admin termine l'event et désigne le gagnant\n"
+            "• Le gagnant reçoit la récompense (similaire à /add_wealth)"
+        )
+        embed.add_field(name="🎉 Système d'Événements", value=event_cmds, inline=False)
+
+        # --- 6. SECTION ADMIN ---
         if interaction.user.guild_permissions.administrator:
             admin_cmds = (
                 "`/add_team` | `/remove_teams` : Gestion des équipes\n"

@@ -25,10 +25,24 @@ class BrawlBot(commands.Bot):
 
     async def setup_hook(self):
         # Charge tous les fichiers .py dans le dossier cogs
+        loaded = []
+        failed = []
         for filename in os.listdir('./cogs'):
             if filename.endswith('.py'):
-                await self.load_extension(f'cogs.{filename[:-3]}')
-        print("✅ Toutes les extensions sont chargées.")
+                cog_name = f'cogs.{filename[:-3]}'
+                try:
+                    await self.load_extension(cog_name)
+                    loaded.append(filename[:-3])
+                    print(f"Loaded cog: {filename[:-3]}")
+                except Exception as e:
+                    failed.append((filename[:-3], str(e)))
+                    print(f"Failed to load cog {filename[:-3]}: {e}")
+
+        print(f"Loaded {len(loaded)} cogs: {', '.join(loaded)}")
+        if failed:
+            print(f"Failed to load {len(failed)} cogs:")
+            for name, error in failed:
+                print(f"  - {name}: {error}")
 
     async def on_ready(self):
         print(f'Bot connecté en tant que {self.user.name}')
