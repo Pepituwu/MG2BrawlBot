@@ -95,6 +95,7 @@ class General(commands.Cog):
                 "`/valide_duel` : Valider le gagnant d'un duel officiel\n"
                 "`/cancel_duel` : Annuler un duel sans pénalité\n"
                 "`/add_wealth [équipe] [joueur] [montant]` : Attribuer des points de contribution hebdo\n"
+                "`/remove_wealth [équipe] [joueur] [montant]` : Retirer des points de contribution\n"
                 "`/add_points` | `/remove_points` : Gestion de la banque\n"
                 "`/add_player` | `/remove_player` : Transferts forcés"
             )

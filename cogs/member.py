@@ -101,6 +101,49 @@ class Members(commands.Cog):
         
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.command(name="remove_wealth", description="Modo: Retirer des points de contribution à un joueur")
+    @app_commands.autocomplete(team=team_autocomplete)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def remove_wealth(self, interaction: discord.Interaction, team: str, player: discord.Member, amount: int):
+        """Retire des points de richesse personnelle au joueur et à la trésorerie de l'équipe"""
+        if team not in bot_data["teams"]:
+            await interaction.response.send_message("❌ Équipe introuvable.", ephemeral=True)
+            return
+
+        t_data = bot_data["teams"][team]
+
+        # Chercher le joueur
+        member_obj = None
+        for i, m_entry in enumerate(t_data["members"]):
+            if isinstance(m_entry, dict):
+                if m_entry.get("id") == player.id:
+                    member_obj = m_entry
+                    break
+            elif isinstance(m_entry, (int, float)):
+                if int(m_entry) == player.id:
+                    member_obj = {"id": int(m_entry), "wealth": 0}
+                    t_data["members"][i] = member_obj # Update in-place
+                    break
+
+        member = member_obj
+        if not member:
+            await interaction.response.send_message(f"⚠️ {player.mention} n'est pas dans **{team}**.", ephemeral=True)
+            return
+
+        # Retirer la richesse personnelle et les points de l'équipe (peut devenir négatif)
+        member["wealth"] -= amount
+        t_data["points"] -= amount
+        save_data()
+
+        embed = discord.Embed(title="💸 Retrait de Contribution", color=discord.Color.red())
+        embed.add_field(name="Joueur", value=player.mention, inline=False)
+        embed.add_field(name="Équipe", value=team, inline=False)
+        embed.add_field(name="Points retirés", value=f"- {amount:,} MGP", inline=False)
+        embed.add_field(name="Nouvelle fortune personnelle", value=f"**{member['wealth']:,}** MGP", inline=True)
+        embed.add_field(name="Nouveau solde équipe", value=f"**{t_data['points']:,}** MGP", inline=True)
+
+        await interaction.response.send_message(embed=embed)
+
     @app_commands.command(name="player_ranking", description="Affiche le classement des joueurs d'une équipe (par fortune personnelle)")
     @app_commands.autocomplete(team=team_autocomplete)
     async def player_ranking(self, interaction: discord.Interaction, team: str):
