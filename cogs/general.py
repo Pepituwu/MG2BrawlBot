@@ -91,6 +91,7 @@ class General(commands.Cog):
         if interaction.user.guild_permissions.administrator:
             admin_cmds = (
                 "`/add_team` | `/remove_teams` : Gestion des équipes\n"
+                "`/transfert_leadership [équipe] [nouveau_leader]` : Transférer la leadership\n"
                 "`/add_auction` : Mettre un joueur aux enchères\n"
                 "`/valide_duel` : Valider le gagnant d'un duel officiel\n"
                 "`/cancel_duel` : Annuler un duel sans pénalité\n"

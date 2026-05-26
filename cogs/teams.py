@@ -126,5 +126,64 @@ class Teams(commands.Cog):
         else:
             await interaction.response.send_message("❌ Équipe introuvable.", ephemeral=True)
 
+    # --- COMMANDE TRANSFERT LEADERSHIP ---
+    @app_commands.command(name="transfert_leadership", description="Admin: Transférer la leadership d'une équipe")
+    @app_commands.describe(team="L'équipe concernée", new_leader="Le nouveau leader")
+    @app_commands.autocomplete(team=team_autocomplete)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def transfert_leadership(self, interaction: discord.Interaction, team: str, new_leader: discord.Member):
+        """Transfère la leadership d'une équipe à un autre membre"""
+        if team not in bot_data["teams"]:
+            await interaction.response.send_message(f"❌ L'équipe **{team}** n'existe pas.", ephemeral=True)
+            return
+
+        team_data = bot_data["teams"][team]
+        current_leader_id = team_data["leader_id"]
+
+        # Vérifier si le nouveau leader est déjà membre de l'équipe
+        is_member = False
+        for member in team_data["members"]:
+            if isinstance(member, dict):
+                if member.get("id") == new_leader.id:
+                    is_member = True
+                    break
+            elif isinstance(member, (int, float)):
+                if int(member) == new_leader.id:
+                    is_member = True
+                    break
+
+        if not is_member:
+            await interaction.response.send_message(
+                f"❌ {new_leader.mention} n'est pas membre de l'équipe **{team}**. "
+                f"Ajoutez-le d'abord avec `/add_player`.",
+                ephemeral=True
+            )
+            return
+
+        # Ne pas permettre de transférer la leadership à soi-même si déjà leader
+        if current_leader_id == new_leader.id:
+            await interaction.response.send_message(
+                f"⚠️ {new_leader.mention} est déjà le leader de l'équipe **{team}**.",
+                ephemeral=True
+            )
+            return
+
+        # Mettre à jour le leader
+        old_leader = await interaction.client.fetch_user(current_leader_id)
+        old_leader_name = old_leader.name if old_leader else f"ID:{current_leader_id}"
+
+        team_data["leader_id"] = new_leader.id
+        save_data()
+
+        embed = discord.Embed(
+            title="🔄 Leadership Transférée",
+            description=f"La leadership de l'équipe **{team}** a été transférée avec succès.",
+            color=discord.Color.orange()
+        )
+        embed.add_field(name="Ancien leader", value=old_leader.mention, inline=True)
+        embed.add_field(name="Nouveau leader", value=new_leader.mention, inline=True)
+
+        await interaction.response.send_message(embed=embed)
+
 async def setup(bot):
     await bot.add_cog(Teams(bot))
