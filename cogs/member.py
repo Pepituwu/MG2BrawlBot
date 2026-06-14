@@ -192,6 +192,9 @@ class Members(commands.Cog):
     @app_commands.command(name="global_ranking", description="Affiche le classement global de tous les joueurs (par fortune personnelle)")
     async def global_ranking(self, interaction: discord.Interaction):
         """Affiche tous les joueurs de toutes les équipes triés par fortune personnelle"""
+        # Déferrer la réponse immédiatement pour éviter l'expiration de l'interaction
+        await interaction.response.defer()
+
         all_members = []
         for team_name, team in bot_data.get("teams", {}).items():
             for member in team.get("members", []):
@@ -205,7 +208,7 @@ class Members(commands.Cog):
         sorted_members = sorted(all_members, key=lambda m: m["wealth"], reverse=True)
         
         if not sorted_members:
-            await interaction.response.send_message("❌ Aucun joueur trouvé.", ephemeral=True)
+            await interaction.followup.send("❌ Aucun joueur trouvé.", ephemeral=True)
             return
         
         # Initialiser l'embed
@@ -239,8 +242,8 @@ class Members(commands.Cog):
             embed.add_field(name=f"Joueurs (suite {field_count + 1})" if field_count > 0 else "Joueurs", value=ranking_text, inline=False)
 
         embed.set_footer(text=f"Total: {len(sorted_members)} joueurs")
-        
-        await interaction.response.send_message(embed=embed)
+
+        await interaction.followup.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Members(bot))
