@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mg2brawlbot:
+    image: ghcr.io/pepituwu/mg2brawlbot:latest
+    container_name: mg2brawlbot
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - BH_API_KEY=${BH_API_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 60s
+    labels:
+      - "com.example.description=MG2 Brawl Bot Discord Bot"
+      - "com.example.version=latest"
